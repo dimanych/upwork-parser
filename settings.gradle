@@ -1,0 +1,5 @@
+rootProject.name = 'upwork-parser'
+
+include 'gradle-javafx-plugin'
+
+
