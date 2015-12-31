@@ -1,3 +1,3 @@
 # upwork-parser
 Upwrok jobs parser with javafx GUI
-Required Java 8u45 or higher
+Required Java 8u40 or higher

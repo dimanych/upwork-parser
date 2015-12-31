@@ -68,6 +68,9 @@ public class FxController extends AnchorPane {
       ObservableList<Job> jobs = FXCollections.observableArrayList((List<Job>) action.getValue());
       jobTitleColumn.setCellValueFactory(cell -> new ReadOnlyObjectWrapper<>(cell.getValue().getTitle()));
       jobDateColumn.setCellValueFactory(cell -> new ReadOnlyObjectWrapper<>(Util.getDate(cell.getValue().getPublishTime())));
+      jobList.setOnMouseClicked(event1 -> {
+
+      });
       jobList.setItems(jobs);
     });
     new Thread(action).start();
