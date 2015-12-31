@@ -3,7 +3,7 @@ package com.dimanych;
 import com.dimanych.controller.FxController;
 import javafx.application.Application;
 import javafx.stage.Stage;
-import util.Params;
+import com.dimanych.util.Params;
 
 /**
  * <p>com.dimanych.Parser jobs from upwork, using browser cookies</p>
@@ -15,6 +15,7 @@ public class Parser extends Application {
 
   private Stage stage;
 
+
   @Override
   public void start(Stage primaryStage) throws Exception {
     getInstance().initStage(primaryStage);
@@ -22,8 +23,6 @@ public class Parser extends Application {
     controller.changeScene(Params.START_FXML);
     primaryStage.show();
 
-    Action action = new Action();
-    action.getJobs();
   }
 
   private void initStage(Stage stage) {

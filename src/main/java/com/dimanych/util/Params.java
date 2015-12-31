@@ -1,4 +1,4 @@
-package util;
+package com.dimanych.util;
 
 /**
  * <p>Константные филды - параметры</p>
@@ -13,4 +13,6 @@ public class Params {
 
   //Текстовые сообщения
   public static final String APP_CAPTION = "Upwork parcer";
+  public static final String MSG_INFO = "К сведению";
+  public static final String MSG_WARNING = "Опасносте!";
 }

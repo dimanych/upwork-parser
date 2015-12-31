@@ -9,9 +9,7 @@ import java.util.Calendar;
  * @author Dmitriy Grigoriev
  * @since 1.0
  */
-public class Job {
-  private String id;
-  private String title;
+public class Job extends BaseEntity {
   private JobType type;
   private String description;
   private String budget;
@@ -21,22 +19,6 @@ public class Job {
   private String duration;
   private String payIndicator;
   private String starsInfo;
-
-  public String getId() {
-    return id;
-  }
-
-  public void setId(String id) {
-    this.id = id;
-  }
-
-  public String getTitle() {
-    return title;
-  }
-
-  public void setTitle(String title) {
-    this.title = title;
-  }
 
   public JobType getType() {
     return type;

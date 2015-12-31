@@ -2,6 +2,7 @@ package com.dimanych;
 
 import com.dimanych.entity.Job;
 import com.dimanych.entity.JobType;
+import javafx.concurrent.Task;
 import org.apache.commons.collections4.ListUtils;
 import org.json.JSONObject;
 import org.jsoup.Jsoup;
@@ -25,9 +26,9 @@ import java.util.Optional;
  * <p></p>
  *
  * @author Dmitriy Grigoriev
- * @since 1.7.5
+ * @since 1.0
  */
-public class Action {
+public class Action extends Task {
 
   public static final String USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/33.0.1750.152 Safari/537.36";
   public static final String SESSION_ID = "session_id";
@@ -37,9 +38,10 @@ public class Action {
 
 
   /**
-   * Parsing jobs by cookie session_id
+   * Парсим jobs по кукисам session_id
    */
-  public void getJobs() {
+  public List<Job> getJobs() {
+    List<Job> jobs = new ArrayList<>();
     try {
       Document doc = Jsoup.connect("https://www.upwork.com/find-work-home/?topic=1965391")
         .userAgent(USER_AGENT)
@@ -47,17 +49,16 @@ public class Action {
         .get();
 
       Elements newsHeadlines = doc.select(CSS_SELECTOR);
-      List<Job> jobs = new ArrayList<>();
       ListUtils.emptyIfNull(newsHeadlines)
         .forEach(element -> fillJobList(jobs, element));
 
       //if socket timeout, try again
-      System.out.println();
     } catch (SocketTimeoutException e) {
       getJobs();
     } catch (IOException ioe) {
       ioe.printStackTrace();
     }
+    return jobs;
   }
 
   private void fillJob(Element element, Job job) {
@@ -125,5 +126,11 @@ public class Action {
       .map(item -> item.attr(attr))
       .map(String::trim)
       .orElse(EMPTY);
+  }
+
+  @Override
+  protected List<Job> call() throws Exception {
+    System.out.println("call");
+    return getJobs();
   }
 }

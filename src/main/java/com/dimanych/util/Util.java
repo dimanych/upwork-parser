@@ -1,9 +1,12 @@
-package util;
+package com.dimanych.util;
 
 import com.dimanych.Parser;
 
 import java.io.InputStream;
 import java.net.URL;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
 
 /**
  * <p></p>
@@ -12,6 +15,8 @@ import java.net.URL;
  * @since 1.0
  */
 public class Util {
+
+  public static final DateFormat dateFormat = new SimpleDateFormat("HH:mm dd.MM.yyyy");
 
   /**
    * Вытягиваем абсолютную ссылку из относительной
@@ -53,4 +58,7 @@ public class Util {
     return Parser.getInstance().getStage().getScene().lookup(id);
   }
 
+  public static String getDate(Calendar cal) {
+    return dateFormat.format(cal.getTime());
+  }
 }

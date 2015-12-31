@@ -1,31 +1,76 @@
 package com.dimanych.controller;
 
+import com.dimanych.Action;
 import com.dimanych.Parser;
+import com.dimanych.entity.Job;
+import com.dimanych.entity.message.WarningMsg;
+import com.dimanych.util.Params;
+import com.dimanych.util.Util;
+import javafx.beans.property.ReadOnlyObjectWrapper;
+import javafx.collections.FXCollections;
+import javafx.collections.ObservableList;
+import javafx.concurrent.Task;
+import javafx.concurrent.WorkerStateEvent;
+import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
 import javafx.fxml.JavaFXBuilderFactory;
 import javafx.scene.Scene;
+import javafx.scene.control.ListView;
+import javafx.scene.control.TableColumn;
+import javafx.scene.control.TableView;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.stage.Stage;
-import util.Params;
-import util.Util;
 
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.List;
 
 /**
  * <p></p>
  *
  * @author Dmitriy Grigoriev
- * @since 1.7.5
+ * @since 1.0
  */
 public class FxController extends AnchorPane {
 
+  @FXML
+  private ListView rssList;
+  @FXML
+  private TableView<Job> jobList;
+  @FXML
+  private TableColumn<Job, String> jobTitleColumn;
+  @FXML
+  private TableColumn<Job, String> jobDateColumn;
+
+  public ListView getRssList() {
+    return rssList;
+  }
+
+  public void setRssList(ListView rssList) {
+    this.rssList = rssList;
+  }
+
+  public TableView getJobList() {
+    return jobList;
+  }
+
+  public void setJobList(TableView jobList) {
+    this.jobList = jobList;
+  }
+
   private InitSceneService actions;
 
-
-  public FxController() {
-    setActions(new InitSceneParamImpl());
+  @FXML
+  public void initialize() {
+    Task action = new Action();
+    action.addEventHandler(WorkerStateEvent.WORKER_STATE_SUCCEEDED, event -> {
+      ObservableList<Job> jobs = FXCollections.observableArrayList((List<Job>) action.getValue());
+      jobTitleColumn.setCellValueFactory(cell -> new ReadOnlyObjectWrapper<>(cell.getValue().getTitle()));
+      jobDateColumn.setCellValueFactory(cell -> new ReadOnlyObjectWrapper<>(Util.getDate(cell.getValue().getPublishTime())));
+      jobList.setItems(jobs);
+    });
+    new Thread(action).start();
   }
 
   /**
@@ -73,10 +118,9 @@ public class FxController extends AnchorPane {
     Scene scene = new Scene(page);
     getStage().setTitle(Params.APP_CAPTION);
     getStage().setScene(scene);
-    FxController controller = loader.getController();
-    InitSceneService localActions = controller.getActions();
+    InitSceneService localActions = this.getActions();
     if (localActions != null) {
-      localActions.init(controller);
+      localActions.init(this);
     }
   }
 
@@ -95,5 +139,6 @@ public class FxController extends AnchorPane {
 
   public void run() {
     System.out.println("test");
+    new WarningMsg("Ololo");
   }
 }
