@@ -130,7 +130,6 @@ public class Action extends Task {
 
   @Override
   protected List<Job> call() throws Exception {
-    System.out.println("call");
     return getJobs();
   }
 }
