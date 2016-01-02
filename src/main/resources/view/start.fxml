@@ -40,12 +40,7 @@
                      <content>
                         <AnchorPane minHeight="-Infinity" minWidth="-Infinity">
                            <children>
-                              <TextArea fx:id="jobDesc1" editable="false" layoutY="12.0" prefHeight="50.0" prefWidth="712.0" wrapText="true">
-                                 <font>
-                                    <Font size="14.0" />
-                                 </font>
-                              </TextArea>
-                              <WebView fx:id="jobDesc" prefHeight="200.0" prefWidth="589.0" />
+                              <WebView fx:id="jobDesc" prefHeight="218.0" prefWidth="715.0" />
                            </children>
                            <padding>
                               <Insets bottom="5.0" left="5.0" right="5.0" top="5.0" />
@@ -61,7 +56,7 @@
                         <Font size="14.0" />
                      </font>
                      <padding>
-                        <Insets left="15.0" top="10.0" />
+                        <Insets left="5.0" top="5.0" />
                      </padding>
                   </Label>
                </children>

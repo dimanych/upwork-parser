@@ -22,6 +22,7 @@ import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
 import javafx.scene.web.WebView;
 import javafx.stage.Stage;
+import org.apache.commons.collections4.CollectionUtils;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -201,6 +202,10 @@ public class FxController extends AnchorPane {
 
   @FXML
   public void initialize() {
+    load();
+  }
+
+  public void load() {
     Task action = new Action();
 
     action.addEventHandler(WorkerStateEvent.WORKER_STATE_SUCCEEDED, event -> {
@@ -215,7 +220,7 @@ public class FxController extends AnchorPane {
             return;
           }
           jobTitle.setText(newValue.getTitle());
-          jobDesc.setAccessibleText(newValue.getDescription());
+          jobDesc.getEngine().loadContent(newValue.getDescription());
           jobBudget.setText(newValue.getBudget());
           jobDuration.setText(newValue.getDuration());
           jobLevel.setText(newValue.getLevel());
@@ -227,10 +232,14 @@ public class FxController extends AnchorPane {
           jobUrl.setOnMouseClicked(event1 -> {
             getApp().getHostServices().showDocument(jobUrl.getText());
           });
-          parsingStatus.setText("Loaded");
         }
       });
       jobList.setItems(jobs);
+      if (CollectionUtils.isEmpty(jobs)) {
+        parsingStatus.setText("Nothing loaded");
+      } else {
+        parsingStatus.setText("Loaded");
+      }
     });
     new Thread(action).start();
     parsingStatus.setText("Loading from upwork...");

@@ -72,7 +72,7 @@ public class Action extends Task {
     try {
       Document doc = Jsoup.connect("https://www.upwork.com/find-work-home/?topic=1965391")
         .userAgent(USER_AGENT)
-        .cookie(SESSION_ID, "452e3d54b4d95650faa445f0cbeb9e31")
+        .cookie(SESSION_ID, "014b432e76250be4807bec782c25c5fd")
         .get();
 
       Elements newsHeadlines = doc.select(CSS_SELECTOR);
@@ -81,16 +81,17 @@ public class Action extends Task {
 
       //if socket timeout, try again
     } catch (SocketTimeoutException e) {
-      Parser.getInstance().getController().getParsingStatus().setText("Timeout. Trying again...");
-      try {
-        Thread.sleep(2000);
-      } catch (InterruptedException e1) {
-        e1.printStackTrace();
-      }
+//      Parser.getInstance().getController().getParsingStatus().setText("Timeout. Trying again...");
+//      try {
+//        Thread.sleep(2000);
+//      } catch (InterruptedException e1) {
+//        e1.printStackTrace();
+//      }
       getJobs();
     } catch (IOException ioe) {
       ioe.printStackTrace();
     }
+//    Parser.getInstance().getController().getParsingStatus().setText("Jobs loaded");
     return jobs;
   }
 
@@ -104,7 +105,7 @@ public class Action extends Task {
       e.printStackTrace();
     }
     job.setDescription(
-      "".equals(getByClass(element, "jsFull")) ? getByClass(element, "oDescription") : getByClass(element, "jsFull"));
+      "".equals(getByClass(element, "jsFull")) ? getHtmlByClass(element, "oDescription") : getHtmlByClass(element, "jsFull"));
     job.setType(JobType.get(getByClass(element, "jsType")));
     job.setBudget(getByClass(element, "jsBudget"));
     job.setPublishTime(getPublishTimeFromJson(element.attr("data-relevance")));
@@ -144,6 +145,12 @@ public class Action extends Task {
     return Optional.ofNullable(element.getElementById(id))
       .map(Element::text)
       .map(String::trim)
+      .orElse(EMPTY);
+  }
+
+  public String getHtmlByClass(Element element, String class_name) {
+    return Optional.ofNullable(element.getElementsByClass(class_name))
+      .map(Elements::html)
       .orElse(EMPTY);
   }
 
