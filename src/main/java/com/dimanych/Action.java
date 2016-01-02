@@ -37,6 +37,33 @@ public class Action extends Task {
   public static final String EMPTY = "";
 
 
+  public List<Job> getJobs_() {
+    List<Job> jobs = new ArrayList<>();
+    for (int i=0; i<10; i++) {
+      Job job = new Job();
+      job.setId("id"+i);
+      job.setBudget("budget"+i);
+      StringBuffer sbDesc = new StringBuffer("begin____________\n");
+      for (int j=0; j<200; j++) {
+        sbDesc.append("description "+j+i);
+      }
+      job.setDescription(sbDesc.toString());
+      job.setDuration("duration"+i);
+      job.setLevel("level"+i);
+      job.setPayIndicator("payIndicator"+i);
+      job.setPublishTime(Calendar.getInstance());
+      job.setStarsInfo("starsInfo"+i);
+      job.setType(i % 2 == 0 ? JobType.FIXED : JobType.HOURLY);
+      try {
+        job.setUrl(new URL("http://upwork/"+i));
+      } catch (MalformedURLException e) {
+        e.printStackTrace();
+      }
+      job.setTitle("Title"+i);
+      jobs.add(job);
+    }
+    return jobs;
+  }
   /**
    * Парсим jobs по кукисам session_id
    */
@@ -54,6 +81,12 @@ public class Action extends Task {
 
       //if socket timeout, try again
     } catch (SocketTimeoutException e) {
+      Parser.getInstance().getController().getParsingStatus().setText("Timeout. Trying again...");
+      try {
+        Thread.sleep(2000);
+      } catch (InterruptedException e1) {
+        e1.printStackTrace();
+      }
       getJobs();
     } catch (IOException ioe) {
       ioe.printStackTrace();

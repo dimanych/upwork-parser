@@ -2,6 +2,7 @@ package com.dimanych.entity;
 
 import java.net.URL;
 import java.util.Calendar;
+import java.util.Objects;
 
 /**
  * <p>Upwork job com.dimanych.entity</p>
@@ -61,7 +62,10 @@ public class Job extends BaseEntity {
   }
 
   public String getDuration() {
-    return duration;
+    if (Objects.nonNull(duration)) {
+      return "Duration: " + duration;
+    }
+    return "";
   }
 
   public void setDuration(String duration) {
@@ -85,7 +89,10 @@ public class Job extends BaseEntity {
   }
 
   public String getBudget() {
-    return budget;
+    if (type.equals(JobType.HOURLY)) {
+      return "";
+    }
+    return "Budget: " + budget;
   }
 
   public void setBudget(String budget) {

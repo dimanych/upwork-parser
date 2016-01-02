@@ -14,15 +14,14 @@ import com.dimanych.util.Params;
 public class Parser extends Application {
 
   private Stage stage;
-
+  private FxController controller;
 
   @Override
   public void start(Stage primaryStage) throws Exception {
     getInstance().initStage(primaryStage);
-    FxController controller = new FxController();
+    controller = new FxController();
     controller.changeScene(Params.START_FXML);
     primaryStage.show();
-
   }
 
   private void initStage(Stage stage) {
@@ -33,6 +32,13 @@ public class Parser extends Application {
     return stage;
   }
 
+  public FxController getController() {
+    return controller;
+  }
+
+  public void setController(FxController controller) {
+    this.controller = controller;
+  }
 
   public static class ParserHolder {
     public static final Parser MAIN_APP_INSTANCE = new Parser();
