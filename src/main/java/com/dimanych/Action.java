@@ -17,6 +17,8 @@ import java.net.URL;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.*;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
 
 /**
  * <p></p>
@@ -33,6 +35,7 @@ public class Action extends Task {
   private static final String DATE_PATTERN = "yyyy-MM-dd'T'HH:mm:ss";
   public static final String EMPTY = "";
   public static final String SESSION_ID = "014b432e76250be4807bec782c25c5fd";
+  private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
   /**
    * Парсим jobs по кукисам session_id

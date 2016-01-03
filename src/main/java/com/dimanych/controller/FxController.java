@@ -4,9 +4,9 @@ import com.dimanych.Action;
 import com.dimanych.Parser;
 import com.dimanych.entity.Job;
 import com.dimanych.entity.JobType;
-import com.dimanych.entity.message.WarningMsg;
 import com.dimanych.util.Params;
 import com.dimanych.util.Util;
+import javafx.application.Platform;
 import javafx.beans.property.ReadOnlyObjectWrapper;
 import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
@@ -31,6 +31,9 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.util.List;
 import java.util.Objects;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 
 /**
  * <p></p>
@@ -39,6 +42,8 @@ import java.util.Objects;
  * @since 1.0
  */
 public class FxController extends AnchorPane {
+
+  private final ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
 
   @FXML
   private ListView rssList;
@@ -225,57 +230,11 @@ public class FxController extends AnchorPane {
 
   @FXML
   public void initialize() {
-    load();
+    runScheduler();
   }
 
-  public void load() {
-    Action action = new Action();
-
-    action.addEventHandler(WorkerStateEvent.WORKER_STATE_SUCCEEDED, event -> {
-      ObservableList<Job> jobs = FXCollections.observableArrayList((List<Job>) action.getValue());
-      jobTitleColumn.setCellValueFactory(cell -> new ReadOnlyObjectWrapper<>(cell.getValue().getTitle()));
-      jobDateColumn.setCellValueFactory(cell -> new ReadOnlyObjectWrapper<>(Util.getDate(cell.getValue().getPublishTime())));
-
-      jobList.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Job>() {
-        @Override
-        public void changed(ObservableValue<? extends Job> observable, Job oldJob, Job newJob) {
-          if (Objects.isNull(newJob)) {
-            return;
-          }
-          jobTitle.setText(newJob.getTitle());
-          jobDesc.getEngine().loadContent(newJob.getDescription());
-          jobBudget.setText(newJob.getBudget());
-          jobDuration.setText(newJob.getDuration());
-          jobLevel.setText(newJob.getLevel());
-          jobPublishTime.setText(Util.getDate(newJob.getPublishTime()));
-          jobStarsInfo.setText(newJob.getStarsInfo());
-          jobType.setText(newJob.getType().toString());
-          jobUrl.setText(String.valueOf(newJob.getUrl()));
-          jobUrl.setOnMouseClicked(event1 ->
-                  getApp().getHostServices().showDocument(jobUrl.getText()));
-          jobCustomer.setText(newJob.getPayIndicator());
-
-          if (!liteMode.isSelected()) {
-            customerInfo.setVisible(true);
-            Document doc = action.connect(String.valueOf(newJob.getUrl()));
-            int sel = newJob.getType().equals(JobType.HOURLY) ? 1 : 2;
-            Element customer = doc.select(Action.CUSTOMER_CSS_SELECTOR).get(sel);
-            customerInfo.getEngine().loadContent(customer.html());
-            Element jobDescr = doc.select("div.air-card").first();
-            jobDesc.getEngine().loadContent(jobDescr.html());
-          }
-
-        }
-      });
-      jobList.setItems(jobs);
-      if (CollectionUtils.isEmpty(jobs)) {
-        parsingStatus.setText("Nothing loaded");
-      } else {
-        parsingStatus.setText("Loaded");
-      }
-    });
-    new Thread(action).start();
-    parsingStatus.setText("Loading from upwork...");
+  public void runScheduler() {
+    scheduler.scheduleAtFixedRate(new JobUpdater(), 0, 1, TimeUnit.MINUTES);
   }
 
   /**
@@ -342,8 +301,63 @@ public class FxController extends AnchorPane {
     this.actions = actions;
   }
 
-  public void run() {
-    System.out.println("test");
-    new WarningMsg("Ololo");
+  private class JobUpdater implements Runnable {
+
+    @Override
+    public void run() {
+      Action action = new Action();
+
+      action.addEventHandler(WorkerStateEvent.WORKER_STATE_SUCCEEDED, event -> {
+        ObservableList<Job> jobs = FXCollections.observableArrayList((List<Job>) action.getValue());
+        jobTitleColumn.setCellValueFactory(cell -> new ReadOnlyObjectWrapper<>(cell.getValue().getTitle()));
+        jobDateColumn.setCellValueFactory(cell -> new ReadOnlyObjectWrapper<>(Util.getDate(cell.getValue().getPublishTime())));
+
+        jobList.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Job>() {
+          @Override
+          public void changed(ObservableValue<? extends Job> observable, Job oldJob, Job newJob) {
+            if (Objects.isNull(newJob)) {
+              return;
+            }
+            jobTitle.setText(newJob.getTitle());
+            jobDesc.getEngine().loadContent(newJob.getDescription());
+            jobBudget.setText(newJob.getBudget());
+            jobDuration.setText(newJob.getDuration());
+            jobLevel.setText(newJob.getLevel());
+            jobPublishTime.setText(Util.getDate(newJob.getPublishTime()));
+            jobStarsInfo.setText(newJob.getStarsInfo());
+            jobType.setText(newJob.getType().toString());
+            jobUrl.setText(String.valueOf(newJob.getUrl()));
+            jobUrl.setOnMouseClicked(event1 ->
+                    getApp().getHostServices().showDocument(jobUrl.getText()));
+            jobCustomer.setText(newJob.getPayIndicator());
+
+            if (!liteMode.isSelected()) {
+              customerInfo.setVisible(true);
+              Document doc = action.connect(String.valueOf(newJob.getUrl()));
+              int sel = newJob.getType().equals(JobType.HOURLY) ? 1 : 2;
+              Element customer = doc.select(Action.CUSTOMER_CSS_SELECTOR).get(sel);
+              customerInfo.getEngine().loadContent(customer.html());
+              Element jobDescr = doc.select("div.air-card").first();
+              jobDesc.getEngine().loadContent(jobDescr.html());
+            }
+
+          }
+        });
+        jobList.setItems(jobs);
+        if (CollectionUtils.isEmpty(jobs)) {
+          parsingStatus.setText("Nothing loaded");
+        } else {
+          parsingStatus.setText("Loaded");
+        }
+      });
+      Platform.runLater(new Runnable() {
+        @Override
+        public void run() {
+          parsingStatus.setText("Loading from upwork...");
+        }
+      });
+      new Thread(action).start();
+    }
   }
+
 }
