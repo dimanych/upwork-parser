@@ -20,6 +20,7 @@ public class Job extends BaseEntity {
   private String duration;
   private String payIndicator;
   private String starsInfo;
+  private String customer;
 
   public JobType getType() {
     return type;
@@ -97,5 +98,13 @@ public class Job extends BaseEntity {
 
   public void setBudget(String budget) {
     this.budget = budget;
+  }
+
+  public String getCustomer() {
+    return customer;
+  }
+
+  public void setCustomer(String customer) {
+    this.customer = customer;
   }
 }

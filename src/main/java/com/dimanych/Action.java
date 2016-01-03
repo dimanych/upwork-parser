@@ -16,11 +16,7 @@ import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
-import java.util.Calendar;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 
 /**
  * <p></p>
@@ -31,71 +27,56 @@ import java.util.Optional;
 public class Action extends Task {
 
   public static final String USER_AGENT = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_9_2) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/33.0.1750.152 Safari/537.36";
-  public static final String SESSION_ID = "session_id";
-  public static final String CSS_SELECTOR = "#jsJobResults article";
+  public static final String SESSION_ID_ATTR = "session_id";
+  public static final String JOBS_CSS_SELECTOR = "#jsJobResults article";
+  public static final String CUSTOMER_CSS_SELECTOR = "div.col-md-3";
   private static final String DATE_PATTERN = "yyyy-MM-dd'T'HH:mm:ss";
   public static final String EMPTY = "";
+  public static final String SESSION_ID = "014b432e76250be4807bec782c25c5fd";
 
-
-  public List<Job> getJobs_() {
-    List<Job> jobs = new ArrayList<>();
-    for (int i=0; i<10; i++) {
-      Job job = new Job();
-      job.setId("id"+i);
-      job.setBudget("budget"+i);
-      StringBuffer sbDesc = new StringBuffer("begin____________\n");
-      for (int j=0; j<200; j++) {
-        sbDesc.append("description "+j+i);
-      }
-      job.setDescription(sbDesc.toString());
-      job.setDuration("duration"+i);
-      job.setLevel("level"+i);
-      job.setPayIndicator("payIndicator"+i);
-      job.setPublishTime(Calendar.getInstance());
-      job.setStarsInfo("starsInfo"+i);
-      job.setType(i % 2 == 0 ? JobType.FIXED : JobType.HOURLY);
-      try {
-        job.setUrl(new URL("http://upwork/"+i));
-      } catch (MalformedURLException e) {
-        e.printStackTrace();
-      }
-      job.setTitle("Title"+i);
-      jobs.add(job);
-    }
-    return jobs;
-  }
   /**
    * Парсим jobs по кукисам session_id
    */
-  public List<Job> getJobs() {
+  public List<Job> getJobs(String url) {
     List<Job> jobs = new ArrayList<>();
-    try {
-      Document doc = Jsoup.connect("https://www.upwork.com/find-work-home/?topic=1965391")
-        .userAgent(USER_AGENT)
-        .cookie(SESSION_ID, "014b432e76250be4807bec782c25c5fd")
-        .get();
+      Document doc = connect(url);
 
-      Elements newsHeadlines = doc.select(CSS_SELECTOR);
+      Elements newsHeadlines = doc.select(JOBS_CSS_SELECTOR);
       ListUtils.emptyIfNull(newsHeadlines)
         .forEach(element -> fillJobList(jobs, element));
-
-      //if socket timeout, try again
-    } catch (SocketTimeoutException e) {
-//      Parser.getInstance().getController().getParsingStatus().setText("Timeout. Trying again...");
-//      try {
-//        Thread.sleep(2000);
-//      } catch (InterruptedException e1) {
-//        e1.printStackTrace();
-//      }
-      getJobs();
-    } catch (IOException ioe) {
-      ioe.printStackTrace();
-    }
-//    Parser.getInstance().getController().getParsingStatus().setText("Jobs loaded");
     return jobs;
   }
 
+  /**
+   * Пытаемся соединиться с заданным url
+   *
+   * @param url строка соединения
+   * @return
+   */
+  public Document connect(String url) {
+    try {
+      return Jsoup.connect(url)
+        .userAgent(USER_AGENT)
+              .cookie(SESSION_ID_ATTR, SESSION_ID)
+              .timeout(5000)
+              .get();
+    } catch (SocketTimeoutException e) {
+      e.printStackTrace();
+    } catch (IOException e) {
+      e.printStackTrace();
+    }
+    return new Document(EMPTY);
+  }
+
   private void fillJob(Element element, Job job) {
+//    if (element.attr("class").contains("js-similar-tile")) {
+//      fillJobSearch(element, job);
+//    } else {
+      fillJobSaved(element, job);
+//    }
+  }
+
+  private void fillJobSaved(Element element, Job job) {
     job.setId(element.attr("data-id"));
     job.setTitle(getByClass(element, "oVisitedLink"));
     try {
@@ -104,15 +85,34 @@ public class Action extends Task {
     } catch (MalformedURLException e) {
       e.printStackTrace();
     }
+    job.setType(JobType.get(getByClass(element, "jsType")));
+    job.setCustomer(getByClass(element, "oSpendIndicator"));
     job.setDescription(
       "".equals(getByClass(element, "jsFull")) ? getHtmlByClass(element, "oDescription") : getHtmlByClass(element, "jsFull"));
-    job.setType(JobType.get(getByClass(element, "jsType")));
     job.setBudget(getByClass(element, "jsBudget"));
-    job.setPublishTime(getPublishTimeFromJson(element.attr("data-relevance")));
+    job.setPublishTime(getPublishTimeFromJson(element.attr("data-relevance"), "publish_time"));
     job.setLevel(getById(element, "jsTier"));
     job.setDuration(getByClass(element, "jsDuration"));
     job.setPayIndicator(getByClassAndAttr(element, "oSpendIcon", "title"));
     job.setStarsInfo(getByClassAndAttr(element, "oStarsContainer", "data-content"));
+  }
+
+  private void fillJobSearch(Element element, Job job) {
+    job.setId(element.attr("data-qm"));
+    job.setTitle(getByClass(element, "visited"));
+    try {
+      job.setUrl(new URL(
+        new URL("https://www.upwork.com"), getByClassAndAttr(element, "visited", "href")));
+    } catch (MalformedURLException e) {
+      e.printStackTrace();
+    }
+    job.setType(JobType.get(getByClass(element, "js-type")));
+    job.setDescription(getByClass(element, "description"));
+    job.setBudget(getByClass(element, "js-budget"));
+    job.setPublishTime(getPublishTimeFromJson(element.attr("data-relevance"), "publishTime"));
+    job.setLevel(getByClass(element, "js-contractor-tier"));
+    job.setDuration(getByClass(element, "js-duration"));
+    job.setCustomer(getByClassAndAttr(element, "o-spend-icon", "title"));
   }
   /**
    * Fill job and add to list
@@ -127,9 +127,9 @@ public class Action extends Task {
   }
 
 
-  private Calendar getPublishTimeFromJson(String jsonObj) {
+  private Calendar getPublishTimeFromJson(String jsonObj, String attr) {
     if (Objects.nonNull(jsonObj)) {
-      String json = String.valueOf(new JSONObject(jsonObj).get("publish_time"));
+      String json = String.valueOf(new JSONObject(jsonObj).get(attr));
       Calendar calendar = Calendar.getInstance();
       try {
         calendar.setTime(new SimpleDateFormat(DATE_PATTERN).parse(json));
@@ -170,6 +170,6 @@ public class Action extends Task {
 
   @Override
   protected List<Job> call() throws Exception {
-    return getJobs();
+    return getJobs("https://www.upwork.com/find-work-home/?topic=1965391");
   }
 }

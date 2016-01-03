@@ -3,6 +3,7 @@ package com.dimanych.controller;
 import com.dimanych.Action;
 import com.dimanych.Parser;
 import com.dimanych.entity.Job;
+import com.dimanych.entity.JobType;
 import com.dimanych.entity.message.WarningMsg;
 import com.dimanych.util.Params;
 import com.dimanych.util.Util;
@@ -11,7 +12,6 @@ import javafx.beans.value.ChangeListener;
 import javafx.beans.value.ObservableValue;
 import javafx.collections.FXCollections;
 import javafx.collections.ObservableList;
-import javafx.concurrent.Task;
 import javafx.concurrent.WorkerStateEvent;
 import javafx.fxml.FXML;
 import javafx.fxml.FXMLLoader;
@@ -20,9 +20,12 @@ import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.layout.AnchorPane;
 import javafx.scene.layout.Pane;
+import javafx.scene.text.Text;
 import javafx.scene.web.WebView;
 import javafx.stage.Stage;
 import org.apache.commons.collections4.CollectionUtils;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -58,8 +61,6 @@ public class FxController extends AnchorPane {
   @FXML
   private Label jobLevel;
   @FXML
-  private Label jobPayIndicator;
-  @FXML
   private Label jobType;
   @FXML
   private Label jobPublishTime;
@@ -69,6 +70,12 @@ public class FxController extends AnchorPane {
   private Hyperlink jobUrl;
   @FXML
   private Label parsingStatus;
+  @FXML
+  private WebView customerInfo;
+  @FXML
+  private Text jobCustomer;
+  @FXML
+  private CheckBox liteMode;
 
   public ListView getRssList() {
     return rssList;
@@ -150,14 +157,6 @@ public class FxController extends AnchorPane {
     this.jobLevel = jobLevel;
   }
 
-  public Label getJobPayIndicator() {
-    return jobPayIndicator;
-  }
-
-  public void setJobPayIndicator(Label jobPayIndicator) {
-    this.jobPayIndicator = jobPayIndicator;
-  }
-
   public Label getJobType() {
     return jobType;
   }
@@ -198,6 +197,30 @@ public class FxController extends AnchorPane {
     this.parsingStatus = parsingStatus;
   }
 
+  public WebView getCustomerInfo() {
+    return customerInfo;
+  }
+
+  public void setCustomerInfo(WebView customerInfo) {
+    this.customerInfo = customerInfo;
+  }
+
+  public Text getJobCustomer() {
+    return jobCustomer;
+  }
+
+  public void setJobCustomer(Text jobCustomer) {
+    this.jobCustomer = jobCustomer;
+  }
+
+  public CheckBox getLiteMode() {
+    return liteMode;
+  }
+
+  public void setLiteMode(CheckBox liteMode) {
+    this.liteMode = liteMode;
+  }
+
   private InitSceneService actions;
 
   @FXML
@@ -206,7 +229,7 @@ public class FxController extends AnchorPane {
   }
 
   public void load() {
-    Task action = new Action();
+    Action action = new Action();
 
     action.addEventHandler(WorkerStateEvent.WORKER_STATE_SUCCEEDED, event -> {
       ObservableList<Job> jobs = FXCollections.observableArrayList((List<Job>) action.getValue());
@@ -215,23 +238,33 @@ public class FxController extends AnchorPane {
 
       jobList.getSelectionModel().selectedItemProperty().addListener(new ChangeListener<Job>() {
         @Override
-        public void changed(ObservableValue<? extends Job> observable, Job oldValue, Job newValue) {
-          if (Objects.isNull(newValue)) {
+        public void changed(ObservableValue<? extends Job> observable, Job oldJob, Job newJob) {
+          if (Objects.isNull(newJob)) {
             return;
           }
-          jobTitle.setText(newValue.getTitle());
-          jobDesc.getEngine().loadContent(newValue.getDescription());
-          jobBudget.setText(newValue.getBudget());
-          jobDuration.setText(newValue.getDuration());
-          jobLevel.setText(newValue.getLevel());
-          jobPayIndicator.setText(newValue.getPayIndicator());
-          jobPublishTime.setText(Util.getDate(newValue.getPublishTime()));
-          jobStarsInfo.setText(newValue.getStarsInfo());
-          jobType.setText(newValue.getType().toString());
-          jobUrl.setText("https://upwork.com" + newValue.getUrl().getPath());
-          jobUrl.setOnMouseClicked(event1 -> {
-            getApp().getHostServices().showDocument(jobUrl.getText());
-          });
+          jobTitle.setText(newJob.getTitle());
+          jobDesc.getEngine().loadContent(newJob.getDescription());
+          jobBudget.setText(newJob.getBudget());
+          jobDuration.setText(newJob.getDuration());
+          jobLevel.setText(newJob.getLevel());
+          jobPublishTime.setText(Util.getDate(newJob.getPublishTime()));
+          jobStarsInfo.setText(newJob.getStarsInfo());
+          jobType.setText(newJob.getType().toString());
+          jobUrl.setText(String.valueOf(newJob.getUrl()));
+          jobUrl.setOnMouseClicked(event1 ->
+                  getApp().getHostServices().showDocument(jobUrl.getText()));
+          jobCustomer.setText(newJob.getPayIndicator());
+
+          if (!liteMode.isSelected()) {
+            customerInfo.setVisible(true);
+            Document doc = action.connect(String.valueOf(newJob.getUrl()));
+            int sel = newJob.getType().equals(JobType.HOURLY) ? 1 : 2;
+            Element customer = doc.select(Action.CUSTOMER_CSS_SELECTOR).get(sel);
+            customerInfo.getEngine().loadContent(customer.html());
+            Element jobDescr = doc.select("div.air-card").first();
+            jobDesc.getEngine().loadContent(jobDescr.html());
+          }
+
         }
       });
       jobList.setItems(jobs);
