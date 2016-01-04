@@ -50,16 +50,6 @@ public class Util {
   }
 
   /**
-   * Ищем ссылку на компонент по id
-   *
-   * @param id
-   * @return
-   */
-  public static Object getComponent(String id) {
-    return Parser.getInstance().getStage().getScene().lookup(id);
-  }
-
-  /**
    * <p>Checks if two calendars represent the same day ignoring time.</p>
    * @param cal1  the first calendar, not altered, not null
    * @param cal2  the second calendar, not altered, not null

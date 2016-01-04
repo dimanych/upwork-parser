@@ -1,7 +1,7 @@
 apply plugin: 'java'
 apply from: 'javafx.plugin'
 
-sourceCompatibility = 1.5
+sourceCompatibility = 1.8
 version = '1.0'
 
 repositories {
@@ -20,3 +20,11 @@ dependencies {
 javafx {
     mainClass = 'com.dimanych.Parser'
 }
+
+jar {
+    manifest {
+        attributes 'Main-class': 'com.dimanych.Parser'
+    }
+}
+
+compileJava.options.encoding = 'UTF-8'
