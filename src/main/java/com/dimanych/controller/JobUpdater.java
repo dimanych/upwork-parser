@@ -92,10 +92,15 @@ public class JobUpdater implements Runnable {
       oldJobs.remove(50, 99);
     }
 
+    if (CollectionUtils.isEmpty(oldJobs)) {
+      return recievedJobs;
+    }
+
     ListUtils.emptyIfNull(recievedJobs).stream()
       .filter(item -> notExist(item, oldJobs))
       .forEach(job -> {
-        String text = job.getType() + "\n" + job.getBudget() + "\n" + job.getDescription().substring(0, 40);
+        String desc = job.getDescription().length() > 40 ? job.getDescription().substring(0, 40) +"..." : job.getDescription();
+        String text = job.getType() + "\n" + job.getBudget() + "\n" + desc;
          Notifications.create()
           .title(job.getTitle())
           .text(text)
