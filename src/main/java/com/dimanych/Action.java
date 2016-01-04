@@ -173,6 +173,37 @@ public class Action extends Task {
 
   @Override
   protected List<Job> call() throws Exception {
-    return getJobs("https://www.upwork.com/find-work-home/?topic=1965391");
+//    return getJobs("https://www.upwork.com/find-work-home/?topic=1965391");
+    return getJobsTest();
+  }
+
+
+  public List<Job> getJobsTest() {
+    List<Job> jobs = new ArrayList<>();
+    Calendar cal = Calendar.getInstance();
+    for (int i=0; i<2; i++) {
+      Job job = new Job();
+      job.setId(i+"id"+cal.getTimeInMillis());
+      job.setBudget("budget"+i);
+      StringBuffer sbDesc = new StringBuffer("begin____________\n");
+      for (int j=0; j<200; j++) {
+        sbDesc.append("description "+j+i);
+      }
+      job.setDescription(sbDesc.toString());
+      job.setDuration("duration"+i);
+      job.setLevel("level"+i);
+      job.setPayIndicator("payIndicator"+i);
+      job.setPublishTime(Calendar.getInstance());
+      job.setStarsInfo("starsInfo"+i);
+      job.setType(i % 2 == 0 ? JobType.FIXED : JobType.HOURLY);
+      try {
+        job.setUrl(new URL("http://upwork/"+i));
+      } catch (MalformedURLException e) {
+        e.printStackTrace();
+      }
+      job.setTitle("Title:"+cal.getTimeInMillis());
+      jobs.add(job);
+    }
+    return jobs;
   }
 }

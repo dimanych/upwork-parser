@@ -7,7 +7,6 @@ import java.net.URL;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
-import java.util.TimeZone;
 
 /**
  * <p></p>
@@ -87,7 +86,6 @@ public class Util {
   }
 
   public static String getDate(Calendar cal) {
-    cal.setTimeZone(TimeZone.getTimeZone("Europe/Moscow"));
     if (isToday(cal)) {
       return dateFormatToday.format(cal.getTime());
     }
