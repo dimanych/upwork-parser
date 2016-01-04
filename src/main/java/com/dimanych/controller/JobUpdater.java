@@ -13,6 +13,7 @@ import javafx.collections.ObservableList;
 import javafx.concurrent.WorkerStateEvent;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.collections4.ListUtils;
+import org.controlsfx.control.Notifications;
 import org.jsoup.nodes.Document;
 import org.jsoup.nodes.Element;
 
@@ -39,7 +40,6 @@ public class JobUpdater implements Runnable {
       ObservableList<Job> jobs = FXCollections.observableArrayList((List<Job>) action.getValue());
 
       controller.getJobList().setItems(getNewJobs(jobs, controller.getJobList().getItems()));
-
       controller.getJobTitleColumn().setCellValueFactory(cell -> new ReadOnlyObjectWrapper<>(cell.getValue().getTitle()));
       controller.getJobDateColumn().setCellValueFactory(cell -> new ReadOnlyObjectWrapper<>(Util.getDate(cell.getValue().getPublishTime())));
 
@@ -94,7 +94,14 @@ public class JobUpdater implements Runnable {
 
     ListUtils.emptyIfNull(recievedJobs).stream()
       .filter(item -> notExist(item, oldJobs))
-      .forEach(item -> oldJobs.add(0, item));
+      .forEach(job -> {
+        String text = job.getType() + "\n" + job.getBudget() + "\n" + job.getDescription().substring(0, 40);
+         Notifications.create()
+          .title(job.getTitle())
+          .text(text)
+          .showWarning();
+        oldJobs.add(0, job);
+      });
     return oldJobs;
   }
 
